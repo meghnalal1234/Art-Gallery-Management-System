@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Artists - Art Gallery{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Our Artists</h1>
+    <p>Meet the talented artists featured in our gallery</p>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Artist ID</th>
+                <th>Name</th>
+                <th>Birthplace</th>
+                <th>Age</th>
+                <th>Style</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if artists %}
+                {% for artist in artists %}
+                <tr>
+                    <td>{{ artist.Artist_ID }}</td>
+                    <td><strong>{{ artist.Name }}</strong></td>
+                    <td>{{ artist.Birthplace }}</td>
+                    <td>{{ artist.Age }}</td>
+                    <td><span class="badge">{{ artist.Style }}</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="no-data">No artists found in the gallery</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if session.get('user_role') == 'Admin' %}
+<div class="admin-section">
+    <h3>Add New Artist</h3>
+    <form id="addArtistForm" class="form-inline">
+        <input type="text" id="artistName" placeholder="Artist Name" required>
+        <input type="text" id="birthplace" placeholder="Birthplace" required>
+        <input type="number" id="age" placeholder="Age" required>
+        <input type="text" id="style" placeholder="Style (e.g., Impressionism)" required>
+        <button type="submit" class="btn btn-success">Add Artist</button>
+    </form>
+    <div id="message" class="message"></div>
+</div>
+
+<script>
+document.getElementById('addArtistForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        Name: document.getElementById('artistName').value,
+        Birthplace: document.getElementById('birthplace').value,
+        Age: parseInt(document.getElementById('age').value),
+        Style: document.getElementById('style').value
+    };
+    
+    try {
+        const response = await fetch('/api/add_artist', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        const messageDiv = document.getElementById('message');
+        
+        if (response.ok) {
+            messageDiv.className = 'message success';
+            messageDiv.textContent = result.message;
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = result.message;
+        }
+    } catch (error) {
+        document.getElementById('message').textContent = 'Error: ' + error.message;
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

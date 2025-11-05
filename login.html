@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Art Gallery{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Login to Art Gallery</h2>
+        <p class="subtitle">Access your account to manage reservations</p>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large">Login</button>
+        </form>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <div class="auth-card">
+        <h2>New to Art Gallery?</h2>
+        <p class="subtitle">Create an account to start making reservations</p>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="regName">Full Name</label>
+                <input type="text" id="regName" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="regEmail">Email Address</label>
+                <input type="email" id="regEmail" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <input type="password" id="regPassword" placeholder="Create a password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" required>
+                    <option value="Visitor">Visitor</option>
+                    <option value="Curator">Curator</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-large">Register</button>
+        </form>
+
+        <div id="regMessage" class="message"></div>
+    </div>
+</div>
+
+<script>
+// Login Form Handler
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        Email: document.getElementById('email').value,
+        Password: document.getElementById('password').value
+    };
+    
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        const messageDiv = document.getElementById('message');
+        
+        if (response.ok) {
+            messageDiv.className = 'message success';
+            messageDiv.textContent = `Welcome back, ${result.Name}! Redirecting...`;
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1000);
+        } else {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = result.message;
+        }
+    } catch (error) {
+        document.getElementById('message').className = 'message error';
+        document.getElementById('message').textContent = 'Error: ' + error.message;
+    }
+});
+
+// Register Form Handler
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        Name: document.getElementById('regName').value,
+        Email: document.getElementById('regEmail').value,
+        Password: document.getElementById('regPassword').value,
+        Role: document.getElementById('role').value
+    };
+    
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        const messageDiv = document.getElementById('regMessage');
+        
+        if (response.ok) {
+            messageDiv.className = 'message success';
+            messageDiv.textContent = result.message + ' You can now login!';
+            document.getElementById('registerForm').reset();
+        } else {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = result.message;
+        }
+    } catch (error) {
+        document.getElementById('regMessage').className = 'message error';
+        document.getElementById('regMessage').textContent = 'Error: ' + error.message;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Reserve Artwork - Art Gallery{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reserve Artwork</h1>
+    <p>Select an artwork to make a reservation</p>
+</div>
+
+<div class="reservation-container">
+    <div class="artwork-selection">
+        <h3>Available Artworks</h3>
+        <div class="artwork-grid">
+            {% if artworks %}
+                {% for artwork in artworks %}
+                <div class="artwork-card" onclick="selectArtwork({{ artwork.Artwork_ID }}, '{{ artwork.Title }}', {{ artwork.Price }})">
+                    <div class="artwork-info">
+                        <h4>{{ artwork.Title }}</h4>
+                        <p class="artist-name">by {{ artwork.Artist_Name or 'Unknown Artist' }}</p>
+                        <p class="artwork-price">${{ "%.2f"|format(artwork.Price) }}</p>
+                    </div>
+                    <button class="btn btn-sm">Select</button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-data">No artworks available for reservation</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="reservation-form">
+        <h3>Reservation Details</h3>
+        <form id="reserveForm">
+            <div class="form-group">
+                <label>Selected Artwork:</label>
+                <input type="text" id="selectedArtwork" readonly placeholder="Click an artwork to select">
+                <input type="hidden" id="artworkId">
+            </div>
+
+            <div class="form-group">
+                <label>Customer ID:</label>
+                <input type="text" id="customerId" value="{{ session.get('user_id') }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Customer Name:</label>
+                <input type="text" value="{{ session.get('user_name') }}" readonly>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large">Make Reservation</button>
+        </form>
+
+        <div id="message" class="message"></div>
+    </div>
+</div>
+
+<script>
+let selectedArtworkId = null;
+
+function selectArtwork(id, title, price) {
+    selectedArtworkId = id;
+    document.getElementById('artworkId').value = id;
+    document.getElementById('selectedArtwork').value = `${title} ($${price.toFixed(2)})`;
+    
+    // Highlight selected card
+    document.querySelectorAll('.artwork-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+}
+
+document.getElementById('reserveForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!selectedArtworkId) {
+        document.getElementById('message').className = 'message error';
+        document.getElementById('message').textContent = 'Please select an artwork first';
+        return;
+    }
+    
+    const data = {
+        Artwork_ID: selectedArtworkId,
+        Customer_ID: parseInt(document.getElementById('customerId').value)
+    };
+    
+    try {
+        const response = await fetch('/api/reserve', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        const messageDiv = document.getElementById('message');
+        
+        if (response.ok) {
+            messageDiv.className = 'message success';
+            messageDiv.textContent = result.message + ' (Status: ' + result.Status + ')';
+            
+            // Reset form
+            document.getElementById('reserveForm').reset();
+            document.getElementById('selectedArtwork').value = '';
+            selectedArtworkId = null;
+            document.querySelectorAll('.artwork-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        } else {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = result.message;
+        }
+    } catch (error) {
+        document.getElementById('message').className = 'message error';
+        document.getElementById('message').textContent = 'Error: ' + error.message;
+    }
+});
+</script>
+{% endblock %}

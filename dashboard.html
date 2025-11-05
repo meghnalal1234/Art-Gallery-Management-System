@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Art Gallery{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user_name }}!</h1>
+    <p class="role-badge">Role: <span class="badge badge-role">{{ user_role }}</span></p>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Statistics Section -->
+    <div class="dashboard-card">
+        <h3>📊 Gallery Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ artist_count }}</div>
+                <div class="stat-label">Total Artists</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ artwork_count }}</div>
+                <div class="stat-label">Total Artworks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ reservations|length }}</div>
+                <div class="stat-label">Your Reservations</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role-Based Actions -->
+    {% if user_role == 'Admin' %}
+    <div class="dashboard-card">
+        <h3>🔧 Admin Actions</h3>
+        <div class="action-buttons">
+            <a href="{{ url_for('artists_page') }}" class="btn btn-primary">Manage Artists</a>
+            <a href="{{ url_for('artworks_page') }}" class="btn btn-primary">Manage Artworks</a>
+            <button class="btn btn-secondary" onclick="viewAllReservations()">View All Reservations</button>
+        </div>
+    </div>
+    {% elif user_role == 'Curator' %}
+    <div class="dashboard-card">
+        <h3>🎨 Curator Actions</h3>
+        <div class="action-buttons">
+            <a href="{{ url_for('artworks_page') }}" class="btn btn-primary">View Artworks</a>
+            <button class="btn btn-secondary" onclick="viewAllReservations()">View Reservations</button>
+            <button class="btn btn-secondary">Manage Exhibitions</button>
+        </div>
+    </div>
+    {% else %}
+    <div class="dashboard-card">
+        <h3>🖼️ Visitor Actions</h3>
+        <div class="action-buttons">
+            <a href="{{ url_for('artworks_page') }}" class="btn btn-primary">Browse Artworks</a>
+            <a href="{{ url_for('reserve_page') }}" class="btn btn-success">Make Reservation</a>
+            <a href="{{ url_for('artists_page') }}" class="btn btn-secondary">View Artists</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- User Reservations -->
+<div class="dashboard-section">
+    <h2>Your Reservations</h2>
+    {% if reservations %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Reservation ID</th>
+                    <th>Artwork Title</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in reservations %}
+                <tr>
+                    <td>{{ reservation.Reservation_ID }}</td>
+                    <td><strong>{{ reservation.Title }}</strong></td>
+                    <td>
+                        {% if reservation.Status == 'Reserved' %}
+                        <span class="badge badge-success">{{ reservation.Status }}</span>
+                        {% else %}
+                        <span class="badge badge-warning">{{ reservation.Status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ reservation.Date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>You haven't made any reservations yet.</p>
+        <a href="{{ url_for('reserve_page') }}" class="btn btn-primary">Make Your First Reservation</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- All Reservations Modal (Admin/Curator) -->
+{% if user_role in ['Admin', 'Curator'] %}
+<div id="allReservationsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>All Reservations</h2>
+        <div id="allReservationsTable"></div>
+    </div>
+</div>
+
+<script>
+async function viewAllReservations() {
+    try {
+        const response = await fetch('/api/reservations');
+        const reservations = await response.json();
+        
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>ID</th><th>Artwork</th><th>Customer</th><th>Status</th><th>Date</th>';
+        html += '</tr></thead><tbody>';
+        
+        reservations.forEach(r => {
+            const statusClass = r.Status === 'Reserved' ? 'badge-success' : 'badge-warning';
+            html += `<tr>
+                <td>${r.Reservation_ID}</td>
+                <td>${r.Title}</td>
+                <td>${r.Customer_Name}</td>
+                <td><span class="badge ${statusClass}">${r.Status}</span></td>
+                <td>${r.Date}</td>
+            </tr>`;
+        });
+        
+        html += '</tbody></table>';
+        document.getElementById('allReservationsTable').innerHTML = html;
+        document.getElementById('allReservationsModal').style.display = 'block';
+    } catch (error) {
+        alert('Error loading reservations: ' + error.message);
+    }
+}
+
+function closeModal() {
+    document.getElementById('allReservationsModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('allReservationsModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Art Gallery{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1>Welcome to the Art Gallery</h1>
+    <p class="subtitle">Discover masterpieces from talented artists around the world</p>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon">👨‍🎨</div>
+        <h3>Explore Artists</h3>
+        <p>Browse through our collection of talented artists and their unique styles</p>
+        <a href="{{ url_for('artists_page') }}" class="btn btn-primary">View Artists</a>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🖼️</div>
+        <h3>View Artworks</h3>
+        <p>Discover stunning artworks across various genres and time periods</p>
+        <a href="{{ url_for('artworks_page') }}" class="btn btn-primary">View Artworks</a>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Reserve Artwork</h3>
+        <p>Reserve your favorite artwork for viewing or purchase</p>
+        <a href="{{ url_for('reserve_page') }}" class="btn btn-primary">Make Reservation</a>
+    </div>
+</div>
+
+<div class="info-section">
+    <h2>About Our Gallery</h2>
+    <p>
+        Our Art Gallery Database Management System provides a comprehensive platform 
+        for managing and exploring art collections. Whether you're an art enthusiast, 
+        collector, or curator, our system offers seamless access to artist information, 
+        artwork details, and reservation management.
+    </p>
+    <p>
+        Join us in celebrating the beauty of art and supporting talented artists 
+        from around the globe. Start your journey by exploring our collection today!
+    </p>
+</div>
+{% endblock %}

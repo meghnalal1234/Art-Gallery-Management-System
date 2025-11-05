@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Artworks - Art Gallery{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Gallery Collection</h1>
+    <p>Explore our curated collection of fine artworks</p>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Artist</th>
+                <th>Type</th>
+                <th>Year</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if artworks %}
+                {% for artwork in artworks %}
+                <tr>
+                    <td>{{ artwork.Artwork_ID }}</td>
+                    <td><strong>{{ artwork.Title }}</strong></td>
+                    <td>{{ artwork.Artist_Name or 'Unknown' }}</td>
+                    <td><span class="badge badge-art">{{ artwork.Kind_of_Art }}</span></td>
+                    <td>{{ artwork.Year_Created }}</td>
+                    <td class="price">${{ "%.2f"|format(artwork.Price) }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" class="no-data">No artworks found in the collection</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if session.get('user_role') == 'Admin' %}
+<div class="admin-section">
+    <h3>Add New Artwork</h3>
+    <form id="addArtworkForm" class="form-grid">
+        <input type="text" id="title" placeholder="Artwork Title" required>
+        <input type="number" id="year" placeholder="Year Created" required>
+        <input type="text" id="kind" placeholder="Kind of Art (e.g., Painting)" required>
+        <input type="number" id="price" placeholder="Price" step="0.01" required>
+        <input type="number" id="artistId" placeholder="Artist ID" required>
+        <button type="submit" class="btn btn-success">Add Artwork</button>
+    </form>
+    <div id="message" class="message"></div>
+</div>
+
+<script>
+document.getElementById('addArtworkForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        Title: document.getElementById('title').value,
+        Year_Created: parseInt(document.getElementById('year').value),
+        Kind_of_Art: document.getElementById('kind').value,
+        Price: parseFloat(document.getElementById('price').value),
+        Artist_art_ID: parseInt(document.getElementById('artistId').value)
+    };
+    
+    try {
+        const response = await fetch('/api/add_artwork', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        const messageDiv = document.getElementById('message');
+        
+        if (response.ok) {
+            messageDiv.className = 'message success';
+            messageDiv.textContent = result.message;
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = result.message;
+        }
+    } catch (error) {
+        document.getElementById('message').textContent = 'Error: ' + error.message;
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
